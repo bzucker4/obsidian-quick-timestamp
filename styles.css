@@ -1,8 +1,8 @@
-/*
+/* Quick Timestamp styles */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+.quick-timestamp-modal-button {
+	display: block;
+	margin: 6px 0;
+	width: 100%;
+	text-align: left;
+}

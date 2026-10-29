@@ -1,11 +1,11 @@
 {
 	"id": "quick-timestamp",
 	"name": "Quick Timestamp",
-	"version": "1.7.0",
-	"minAppVersion": "1.0.0",
+	"version": "1.8.0",
+	"minAppVersion": "1.1.0",
 	"description": "Insert timestamps with multiple named formats, AI conversation stamps (per-prefix format and separator), prefix/suffix styling, and daily-note aware insertion.",
 	"author": "Brian Zucker",
-	"authorUrl": "https://github.com/atlas_relics",
+	"authorUrl": "https://github.com/bzucker4",
 	"fundingUrl": "https://github.com/sponsors/bzucker4",
 	"isDesktopOnly": false
 }
