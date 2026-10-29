@@ -72,10 +72,10 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Quick Timestamp' });
+		new Setting(containerEl).setName('Quick Timestamp').setHeading();
 
 		// Named formats
-		containerEl.createEl('h3', { text: 'Named formats' });
+		new Setting(containerEl).setName('Named formats').setHeading();
 		containerEl.createEl('p', {
 			text: 'Define multiple formats. The ribbon and default command use the selected default. Use the choose command to pick any of them.',
 			cls: 'setting-item-description',
@@ -89,7 +89,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('Name')
 						.setValue(fmt.name)
 						.onChange(async (value) => {
-							fmt.name = value;
+							this.plugin.settings.formats[index].name = value;
 							await this.plugin.saveSettings();
 							this.display();
 						}),
@@ -99,7 +99,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('YYYY-MM-DD HH:mm')
 						.setValue(fmt.format)
 						.onChange(async (value) => {
-							fmt.format = value;
+							this.plugin.settings.formats[index].format = value;
 							await this.plugin.saveSettings();
 						}),
 				);
@@ -147,7 +147,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 			});
 
 		// Prefix / Suffix / Styling
-		containerEl.createEl('h3', { text: 'Prefix, suffix & styling' });
+		new Setting(containerEl).setName('Prefix, suffix & styling').setHeading();
 
 		new Setting(containerEl)
 			.setName('Prefix')
@@ -198,7 +198,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 			);
 
 		// Daily note integration
-		containerEl.createEl('h3', { text: 'Daily note behavior' });
+		new Setting(containerEl).setName('Daily note behavior').setHeading();
 
 		new Setting(containerEl)
 			.setName('Prefer daily note')
@@ -226,7 +226,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 			);
 
 		// AI conversation stamps
-		containerEl.createEl('h3', { text: 'AI conversation stamps' });
+		new Setting(containerEl).setName('AI conversation stamps').setHeading();
 		containerEl.createEl('p', {
 			text: 'Quick prefixes for logging AI chats (e.g. “Grok: 15:37”). Used by the AI stamp command.',
 			cls: 'setting-item-description',
@@ -259,7 +259,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('Prefix (e.g. Grok:)')
 						.setValue(item.prefix)
 						.onChange(async (value) => {
-							item.prefix = value;
+							this.plugin.settings.aiPrefixes[index].prefix = value;
 							await this.plugin.saveSettings();
 							this.display();
 						}),
@@ -269,7 +269,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('Format (optional)')
 						.setValue(item.format || '')
 						.onChange(async (value) => {
-							item.format = value || undefined;
+							this.plugin.settings.aiPrefixes[index].format = value || undefined;
 							await this.plugin.saveSettings();
 						}),
 				)
@@ -278,7 +278,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('Sep (optional)')
 						.setValue(item.separator || '')
 						.onChange(async (value) => {
-							item.separator = value || undefined;
+							this.plugin.settings.aiPrefixes[index].separator = value || undefined;
 							await this.plugin.saveSettings();
 						}),
 				);
@@ -352,7 +352,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 		}
 
 		// Support / funding
-		containerEl.createEl('h3', { text: 'Support' });
+		new Setting(containerEl).setName('Support').setHeading();
 		containerEl.createEl('p', {
 			text: 'This plugin is free. If it saves you time, consider supporting continued development.',
 			cls: 'setting-item-description',
@@ -366,7 +366,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 					.setButtonText('Support')
 					.setCta()
 					.onClick(() => {
-						const url = (this.plugin.manifest as { fundingUrl?: string }).fundingUrl || 'https://github.com/sponsors/atlas_relics';
+						const url = this.plugin.manifest.fundingUrl || 'https://github.com/sponsors/bzucker4';
 						window.open(url, '_blank');
 					}),
 			);
