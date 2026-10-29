@@ -1,4 +1,5 @@
 import {
+	App,
 	Editor,
 	MarkdownView,
 	Modal,
@@ -73,7 +74,7 @@ export default class QuickTimestampPlugin extends Plugin {
 			id: 'support-developer',
 			name: 'Support the developer',
 			callback: () => {
-				const url = (this.manifest as { fundingUrl?: string }).fundingUrl || 'https://github.com/sponsors/bzucker4';
+				const url = this.manifest.fundingUrl || 'https://github.com/sponsors/bzucker4';
 				window.open(url, '_blank');
 			},
 		});
@@ -89,14 +90,12 @@ export default class QuickTimestampPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			(await this.loadData()) as Partial<QuickTimestampSettings>,
 		);
-		// Ensure formats array always exists
 		if (!this.settings.formats || this.settings.formats.length === 0) {
 			this.settings.formats = DEFAULT_SETTINGS.formats;
 		}
 		if (!this.settings.aiPrefixes || this.settings.aiPrefixes.length === 0) {
 			this.settings.aiPrefixes = DEFAULT_SETTINGS.aiPrefixes;
 		} else if (typeof this.settings.aiPrefixes[0] === 'string') {
-			// Migrate old string[] format
 			this.settings.aiPrefixes = (this.settings.aiPrefixes as unknown as string[]).map(p => ({ prefix: p }));
 		}
 		if (!this.settings.aiDefaultPrefix) {
@@ -119,20 +118,14 @@ export default class QuickTimestampPlugin extends Plugin {
 
 	formatTimestamp(format: string): string {
 		const now = new Date();
-
 		if (format === 'locale') {
 			return now.toLocaleString();
 		}
-
-		// Use moment if available for richer formatting, fall back to simple tokens
 		try {
 			if (typeof moment !== 'undefined') {
 				return moment().format(format);
 			}
-		} catch {
-			// fall through
-		}
-
+		} catch {}
 		const pad = (n: number) => n.toString().padStart(2, '0');
 		const tokens: Record<string, string> = {
 			YYYY: now.getFullYear().toString(),
@@ -142,7 +135,6 @@ export default class QuickTimestampPlugin extends Plugin {
 			mm: pad(now.getMinutes()),
 			ss: pad(now.getSeconds()),
 		};
-
 		let result = format;
 		for (const [token, value] of Object.entries(tokens)) {
 			result = result.replaceAll(token, value);
@@ -166,80 +158,48 @@ export default class QuickTimestampPlugin extends Plugin {
 			this.settings.defaultFormatIndex,
 			this.settings.formats.length - 1,
 		);
-		return this.settings.formats[idx] ?? this.settings.formats[0] ?? DEFAULT_SETTINGS.formats[0]!;
+		return this.settings.formats[idx] ?? this.settings.formats[0];
 	}
 
 	async insertTimestamp(editor?: Editor, formatOverride?: string) {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		const activeEditor = editor ?? view?.editor;
-
 		if (!activeEditor) {
 			new Notice('No active editor');
 			return;
 		}
-
 		const fmt = formatOverride ?? this.getDefaultFormat().format;
 		const raw = this.formatTimestamp(fmt);
 		const finalText = this.applyStyling(raw);
-
 		activeEditor.replaceSelection(finalText);
 	}
 
 	async insertInDailyNote() {
-		// Daily Notes is a core plugin; read its settings via the internal plugin registry.
-		const internal = (this.app as unknown as {
-			internalPlugins?: { getPluginById(id: string): { enabled: boolean; instance?: { options?: { format?: string; folder?: string; template?: string } } } | null };
-		}).internalPlugins?.getPluginById('daily-notes');
-		if (!internal || !internal.enabled) {
+		const dailyNotes = this.app.plugins.getPlugin('daily-notes');
+		if (!dailyNotes) {
 			new Notice('Daily Notes core plugin is not enabled');
 			return;
 		}
-		const opts = internal.instance?.options ?? {};
-		const fileName = moment().format(opts.format || 'YYYY-MM-DD');
-		const folder = (opts.folder || '').replace(/^\/+|\/+$/g, '');
-		const path = (folder ? folder + '/' : '') + fileName + '.md';
-		let todayFile: TFile | null = null;
-		const existing = this.app.vault.getAbstractFileByPath(path);
-		if (existing instanceof TFile) {
-			todayFile = existing;
-		} else {
-			try {
-				if (folder && !this.app.vault.getAbstractFileByPath(folder)) {
-					await this.app.vault.createFolder(folder);
-				}
-				let initial = '';
-				const tplPath = opts.template ? opts.template.replace(/\.md$/, '') + '.md' : '';
-				const tpl = tplPath ? this.app.vault.getAbstractFileByPath(tplPath) : null;
-				if (tpl instanceof TFile) initial = await this.app.vault.read(tpl);
-				todayFile = await this.app.vault.create(path, initial);
-			} catch (e) {
-				console.error('Quick Timestamp: failed to create daily note', e);
-			}
-		}
-
+		// @ts-ignore
+		const todayFile = await this.app.plugins.getPlugin('daily-notes').createDailyNote?.(moment()) ?? null;
 		if (!todayFile) {
 			new Notice('Could not open or create today’s daily note');
 			return;
 		}
-
 		const leaf = this.app.workspace.getLeaf(false);
-		await leaf.openFile(todayFile as TFile);
-
-		// Wait a tick for the editor to be ready
-		await new Promise((r) => setTimeout(r, 100));
-
+		if (todayFile instanceof TFile) {
+			await leaf.openFile(todayFile);
+		}
+		await new Promise((r) => window.setTimeout(r, 100));
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
-
 		const editor = view.editor;
 		const heading = this.settings.dailyNoteHeading.trim();
-
 		if (heading) {
 			const content = editor.getValue();
 			const headingLine = content.split('\n').findIndex((line) =>
 				line.trim().startsWith(heading),
 			);
-
 			if (headingLine >= 0) {
 				editor.setCursor(headingLine + 1, 0);
 			} else {
@@ -249,7 +209,6 @@ export default class QuickTimestampPlugin extends Plugin {
 		} else {
 			editor.setCursor(editor.lineCount(), 0);
 		}
-
 		await this.insertTimestamp(editor);
 	}
 
@@ -267,31 +226,24 @@ export default class QuickTimestampPlugin extends Plugin {
 class TimestampModal extends Modal {
 	plugin: QuickTimestampPlugin;
 	editor: Editor;
-
-	constructor(app: any, plugin: QuickTimestampPlugin, editor: Editor) {
+	constructor(app: App, plugin: QuickTimestampPlugin, editor: Editor) {
 		super(app);
 		this.plugin = plugin;
 		this.editor = editor;
 	}
-
 	onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.createEl('h2', { text: 'Choose format' });
-
 		for (const fmt of this.plugin.settings.formats) {
 			const btn = contentEl.createEl('button', { text: fmt.name || fmt.format });
-			btn.style.display = 'block';
-			btn.style.margin = '6px 0';
-			btn.style.width = '100%';
-			btn.style.textAlign = 'left';
+			btn.addClass('quick-timestamp-modal-button');
 			btn.onclick = async () => {
 				await this.plugin.insertTimestamp(this.editor, fmt.format);
 				this.close();
 			};
 		}
 	}
-
 	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
@@ -301,31 +253,24 @@ class TimestampModal extends Modal {
 class AIStampModal extends Modal {
 	plugin: QuickTimestampPlugin;
 	editor: Editor;
-
-	constructor(app: any, plugin: QuickTimestampPlugin, editor: Editor) {
+	constructor(app: App, plugin: QuickTimestampPlugin, editor: Editor) {
 		super(app);
 		this.plugin = plugin;
 		this.editor = editor;
 	}
-
 	onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.createEl('h2', { text: 'AI conversation stamp' });
-
 		for (const prefixObj of this.plugin.settings.aiPrefixes) {
 			const btn = contentEl.createEl('button', { text: prefixObj.prefix });
-			btn.style.display = 'block';
-			btn.style.margin = '6px 0';
-			btn.style.width = '100%';
-			btn.style.textAlign = 'left';
+			btn.addClass('quick-timestamp-modal-button');
 			btn.onclick = async () => {
 				await this.plugin.insertAIStamp(this.editor, prefixObj);
 				this.close();
 			};
 		}
 	}
-
 	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
