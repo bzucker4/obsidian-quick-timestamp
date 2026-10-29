@@ -16,6 +16,14 @@ import {
 	QuickTimestampSettingTab,
 } from './settings';
 
+// Fields Obsidian supports at runtime but does not declare in its public types.
+type ManifestWithFunding = { fundingUrl?: string };
+type AppWithPlugins = App & {
+	plugins: {
+		getPlugin(id: string): { createDailyNote?: (date: moment.Moment) => Promise<unknown> } | null;
+	};
+};
+
 export default class QuickTimestampPlugin extends Plugin {
 	settings!: QuickTimestampSettings;
 
@@ -74,7 +82,7 @@ export default class QuickTimestampPlugin extends Plugin {
 			id: 'support-developer',
 			name: 'Support the developer',
 			callback: () => {
-				const url = this.manifest.fundingUrl || 'https://github.com/sponsors/bzucker4';
+				const url = (this.manifest as ManifestWithFunding).fundingUrl || 'https://github.com/sponsors/bzucker4';
 				window.open(url, '_blank');
 			},
 		});
@@ -158,7 +166,7 @@ export default class QuickTimestampPlugin extends Plugin {
 			this.settings.defaultFormatIndex,
 			this.settings.formats.length - 1,
 		);
-		return this.settings.formats[idx] ?? this.settings.formats[0];
+		return this.settings.formats[idx] ?? this.settings.formats[0] ?? { name: 'ISO DateTime', format: 'YYYY-MM-DD HH:mm' };
 	}
 
 	async insertTimestamp(editor?: Editor, formatOverride?: string) {
@@ -175,13 +183,12 @@ export default class QuickTimestampPlugin extends Plugin {
 	}
 
 	async insertInDailyNote() {
-		const dailyNotes = this.app.plugins.getPlugin('daily-notes');
+		const dailyNotes = (this.app as AppWithPlugins).plugins.getPlugin('daily-notes');
 		if (!dailyNotes) {
 			new Notice('Daily Notes core plugin is not enabled');
 			return;
 		}
-		// @ts-ignore
-		const todayFile = await this.app.plugins.getPlugin('daily-notes').createDailyNote?.(moment()) ?? null;
+		const todayFile = await dailyNotes.createDailyNote?.(moment()) ?? null;
 		if (!todayFile) {
 			new Notice('Could not open or create today’s daily note');
 			return;

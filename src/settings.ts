@@ -89,7 +89,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('Name')
 						.setValue(fmt.name)
 						.onChange(async (value) => {
-							this.plugin.settings.formats[index].name = value;
+							fmt.name = value;
 							await this.plugin.saveSettings();
 							this.display();
 						}),
@@ -99,7 +99,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('YYYY-MM-DD HH:mm')
 						.setValue(fmt.format)
 						.onChange(async (value) => {
-							this.plugin.settings.formats[index].format = value;
+							fmt.format = value;
 							await this.plugin.saveSettings();
 						}),
 				);
@@ -259,7 +259,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('Prefix (e.g. Grok:)')
 						.setValue(item.prefix)
 						.onChange(async (value) => {
-							this.plugin.settings.aiPrefixes[index].prefix = value;
+							item.prefix = value;
 							await this.plugin.saveSettings();
 							this.display();
 						}),
@@ -269,7 +269,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('Format (optional)')
 						.setValue(item.format || '')
 						.onChange(async (value) => {
-							this.plugin.settings.aiPrefixes[index].format = value || undefined;
+							item.format = value || undefined;
 							await this.plugin.saveSettings();
 						}),
 				)
@@ -278,7 +278,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 						.setPlaceholder('Sep (optional)')
 						.setValue(item.separator || '')
 						.onChange(async (value) => {
-							this.plugin.settings.aiPrefixes[index].separator = value || undefined;
+							item.separator = value || undefined;
 							await this.plugin.saveSettings();
 						}),
 				);
@@ -366,7 +366,7 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 					.setButtonText('Support')
 					.setCta()
 					.onClick(() => {
-						const url = this.plugin.manifest.fundingUrl || 'https://github.com/sponsors/bzucker4';
+						const url = (this.plugin.manifest as { fundingUrl?: string }).fundingUrl || 'https://github.com/sponsors/bzucker4';
 						window.open(url, '_blank');
 					}),
 			);
