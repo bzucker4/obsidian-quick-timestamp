@@ -133,7 +133,9 @@ export default class QuickTimestampPlugin extends Plugin {
 			if (typeof moment !== 'undefined') {
 				return moment().format(format);
 			}
-		} catch {}
+		} catch {
+			// Fall back to the built-in token formatter if Moment rejects the format.
+		}
 		const pad = (n: number) => n.toString().padStart(2, '0');
 		const tokens: Record<string, string> = {
 			YYYY: now.getFullYear().toString(),
