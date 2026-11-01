@@ -204,19 +204,40 @@ export default class QuickTimestampPlugin extends Plugin {
 		if (!view) return;
 		const editor = view.editor;
 		const heading = this.settings.dailyNoteHeading.trim();
+		let lines = editor.getValue().split('\n');
+		let sectionStart = 0;
+		let sectionEnd = lines.length;
 		if (heading) {
-			const content = editor.getValue();
-			const headingLine = content.split('\n').findIndex((line) =>
-				line.trim().startsWith(heading),
-			);
-			if (headingLine >= 0) {
-				editor.setCursor(headingLine + 1, 0);
+			let headingLine = lines.findIndex((line) => line.trim().startsWith(heading));
+			if (headingLine < 0) {
+				const lastLine = editor.lastLine();
+				const lastText = editor.getLine(lastLine);
+				editor.setCursor(lastLine, lastText.length);
+				editor.replaceSelection((lastText.trim() ? '\n\n' : '\n') + heading);
+				lines = editor.getValue().split('\n');
+				headingLine = lines.length - 1;
+			}
+			sectionStart = headingLine + 1;
+			// Markdown heading line: matches "## Tasks" and "# Notes", rejects "#tag" and "- item".
+			const MARKDOWN_HEADING = /^#{1,6}\s/;
+			const nextHeading = lines.slice(sectionStart).findIndex((line) => MARKDOWN_HEADING.test(line));
+			sectionEnd = nextHeading < 0 ? lines.length : sectionStart + nextHeading;
+		}
+		// Append after the last non-empty line of the section so each entry gets its own line.
+		const sectionLines = lines.slice(sectionStart, sectionEnd);
+		const lastFilled = sectionLines.map((line) => line.trim() !== '').lastIndexOf(true);
+		const target = lastFilled < 0 ? -1 : sectionStart + lastFilled;
+		if (target < 0) {
+			if (sectionStart < sectionEnd) {
+				editor.setCursor(sectionStart, 0);
 			} else {
-				editor.setCursor(editor.lineCount(), 0);
-				editor.replaceSelection('\n' + heading + '\n');
+				const anchor = Math.max(sectionStart - 1, 0);
+				editor.setCursor(anchor, (lines[anchor] ?? '').length);
+				editor.replaceSelection('\n');
 			}
 		} else {
-			editor.setCursor(editor.lineCount(), 0);
+			editor.setCursor(target, (lines[target] ?? '').length);
+			editor.replaceSelection('\n');
 		}
 		await this.insertTimestamp(editor);
 	}
