@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-quick-timestamp",
-	"version": "1.8.1",
+	"version": "1.8.2",
 	"description": "Obsidian plugin to quickly insert customizable timestamps into notes.",
 	"main": "main.js",
 	"type": "module",
