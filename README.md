@@ -91,8 +91,5 @@ The **[AI Work Log Vault](https://atlascreative0.gumroad.com/l/ai-work-log-vault
 
 0BSD — see the [LICENSE](LICENSE) file. You are free to use, modify, and redistribute the free version.
 
-## Author
-
-Brian Zucker ([@atlas_relics](https://github.com/atlas_relics))
 
 Built following the official Obsidian plugin toolkit so it can be published to the community directory and used by real people.
