@@ -83,6 +83,10 @@ If it helps your workflow, you can support ongoing development:
 
 All current features remain free.
 
+## Want a ready-made AI work log?
+
+The **[AI Work Log Vault](https://atlascreative0.gumroad.com/l/ai-work-log-vault)** is a pre-configured Obsidian vault built around Quick Timestamp: daily log, AI session templates, a prompt library, and Dataview dashboards that show where your AI time goes. Set up in 2 minutes.
+
 ## License
 
 0BSD — see the [LICENSE](LICENSE) file. You are free to use, modify, and redistribute the free version.
