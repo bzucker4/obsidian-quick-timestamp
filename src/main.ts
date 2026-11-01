@@ -30,7 +30,7 @@ export default class QuickTimestampPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		this.addRibbonIcon('clock', 'Insert Timestamp', async (_evt: MouseEvent) => {
+		this.addRibbonIcon('clock', 'Insert timestamp', async (_evt: MouseEvent) => {
 			await this.insertTimestamp();
 		});
 
@@ -187,7 +187,7 @@ export default class QuickTimestampPlugin extends Plugin {
 	async insertInDailyNote() {
 		const dailyNotes = (this.app as AppWithPlugins).plugins.getPlugin('daily-notes');
 		if (!dailyNotes) {
-			new Notice('Daily Notes core plugin is not enabled');
+			new Notice('Daily notes core plugin is not enabled');
 			return;
 		}
 		const todayFile = await dailyNotes.createDailyNote?.(moment()) ?? null;

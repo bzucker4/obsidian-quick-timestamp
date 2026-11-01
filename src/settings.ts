@@ -72,8 +72,6 @@ export class QuickTimestampSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName('Timestamp settings').setHeading();
-
 		// Named formats
 		new Setting(containerEl).setName('Named formats').setHeading();
 		containerEl.createEl('p', {
