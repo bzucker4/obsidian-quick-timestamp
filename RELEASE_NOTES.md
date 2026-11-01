@@ -1,10 +1,4 @@
-## Quick Timestamp 1.8.1
+## Quick Timestamp 1.8.2
 
-Maintenance release to meet Obsidian community review requirements.
-
-- Removed the redundant top-level heading from the settings tab
-- Switched UI text to sentence case
-- Added a comment to the Moment fallback catch block
-- Synced package-lock.json so `npm ci` installs cleanly
-- Added an ESLint config using eslint-plugin-obsidianmd
-- Releases are now built by GitHub Actions with signed build provenance attestations
+- Fixed: "Insert timestamp in daily note" now adds each entry on its own new line at the end of your chosen heading's section. Previously a second entry could be inserted at the start of an existing line.
+- If the heading is missing from today's note, it is added at the end with a blank line before it.
